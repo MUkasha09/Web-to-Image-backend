@@ -1,5 +1,6 @@
 from flask import Flask, jsonify
 import base64
+!playwright install
 from playwright.sync_api import sync_playwright
 
 app = Flask(__name__)

@@ -4,28 +4,41 @@ from playwright.sync_api import sync_playwright
 
 app = Flask(__name__)
 
-@app.route("/scrape")
-def scrape():
+def run_scraper():
     with sync_playwright() as p:
-        browser = p.chromium.launch()
+        browser = p.chromium.launch(headless=True)
         page = browser.new_page()
+
         page.goto("https://mepco-it.com.pk/missing_batches_report.asp")
-        page.wait_for_load_state('networkidle')
+        page.wait_for_load_state("networkidle")
 
         title = page.title()
 
-        screenshot_path = "screenshot.png"
-        page.screenshot(path=screenshot_path, full_page=True)
+        path = "/tmp/screenshot.png"
+        page.screenshot(path=path, full_page=True)
 
         browser.close()
 
-    with open(screenshot_path, "rb") as f:
-        image_base64 = base64.b64encode(f.read()).decode()
+    with open(path, "rb") as f:
+        image = base64.b64encode(f.read()).decode()
 
-    return jsonify({
+    return {
+        "status": "success",
         "title": title,
-        "image": image_base64
-    })
+        "image": image
+    }
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+@app.route("/run", methods=["GET"])
+def run():
+    try:
+        return jsonify(run_scraper())
+    except Exception as e:
+        return jsonify({
+            "status": "failed",
+            "error": str(e)
+        }), 500
+
+
+@app.route("/")
+def health():
+    return {"status": "live"}

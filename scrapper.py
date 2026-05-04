@@ -28,6 +28,13 @@ def run_scraper():
         "image": image
     }
 
+import os
+
+@app.route("/check")
+def check():
+    path = os.path.expanduser("~/.cache/ms-playwright")
+    return {"exists": os.path.exists(path), "path": path}
+
 @app.route("/run", methods=["GET"])
 def run():
     try:
